@@ -4,18 +4,33 @@ import cloudinary, cloudinary.api,cloudinary.uploader
 from django.contrib.auth.models import User
 from tinymce.models import HTMLField
 # Create your models here.
+class Following(models.Model):
+    user= models.ForeignKey(User, on_delete = models.CASCADE, null = True, blank = True)
+
+class InstaPhotos(models.Model):
+    name = models.CharField(max_length = 20)
+    image = CloudinaryField('image', null = True, blank = True)
 class Comment(models.Model):
     comment = models.CharField(max_length = 300)
 class Profile(models.Model):
     bio = models.TextField(blank = True, null = True)
     dp = CloudinaryField('image', null = True, blank = True)
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+    following = models.ManyToManyField(Following)
+
+    @classmethod
+    def search_users(cls, search_term):
+        users = [user for user in User.objects.all()]
+        user = User.objects.filter(username__icontains = search_term).all()
+        print(users)
+        return user
 class Image(models.Model):
-    image = CloudinaryField('image', null = True, blank = True)
+    image = CloudinaryField('image', null = True)
     name = models.CharField(max_length = 30)
-    caption = models.TextField(blank = True, null = True) #HTMLField()
-    likes = models.IntegerField()
-    comments = models.ForeignKey(Comment, on_delete=models.DO_NOTHING)
-    profile = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
+    caption = models.TextField() #HTMLField()
+    likes = models.IntegerField(blank = True,null = True)
+    comments = models.ManyToManyField(Comment)
+    profile = models.ForeignKey(Profile, null = True, blank = True, on_delete=models.DO_NOTHING)
     pub_date = models.DateTimeField(null = True, blank = True, auto_now_add=True)
 
     def save_image(self):
