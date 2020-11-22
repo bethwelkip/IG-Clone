@@ -1,27 +1,36 @@
 from django.shortcuts import render, redirect, Http404
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login as log, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Image,Profile, Comment
-from .forms import LoginForm
+from .models import Image,Profile, Comment, Following
+from .forms import LoginForm, UploadForm
 from .fillnav import initialize
 from .emails import send_welcome_email
 from django_registration.forms import RegistrationForm
+import cloudinary, cloudinary.api,cloudinary.uploader
 # from .forms import 
 # Create your views here.
 def register(request):
     form =  RegistrationForm(request.POST or None)
     context = {}
     if form.is_valid():
-        user = request.GET.get('username')
-        email = request.GET.get('email')
-        password = request.GET.get('password')
-        form.save()
-        # send_welcome_email(user,email)
+        username = form.cleaned_data.get('username')
+        email = form.cleaned_data.get('email')
+        password = form.cleaned_data.get('password1')
+        # print(username, password, email)
+        # form.save()
+        user = User.objects.create_user(username = username, email = email, password = password)
+        user.save()
+        print(user.password)
+        profile = Profile(user = user)
+        profile.save()
+        print(user.id)
+        # send_welcome_email(user,email) username password email first_name last_name
         return redirect('login')
     else: 
         messages.info(request, "Username or Password is incorrect")
-        print("Herr")
+        print(form.errors)
         return render(request, 'auth/registration.html', {"form":form})
     return render(request, 'auth/registration.html', {"form":form})
 
@@ -29,45 +38,92 @@ def login(request):
     form = LoginForm()
     context = {"form":form}
     if request.method == "POST":
-        user = request.GET.get('username')
-        password = request.GET.get('password')
-        # print("Here")
+        user = request.POST.get('username')
+        password = request.POST.get('password')
+        print(user, password, "\n\n")
         user = authenticate(request, username=user, password = password)
         # print("Here")
         if user is not None:
             print("Here")
-            login(request, user)
-            return redirect('profile', context)
+            log(request, user)
+            print("Here2")
+            return redirect('allprofiles')
         else: 
             messages.info(request, "Username or Password is incorrect")
             context.update({"messages": messages})
             return redirect('login')
     
     return render(request, 'auth/login.html', context)
-# @login_required(login_url = '/auth/login')
+@login_required(login_url = '/auth/login')
 def allprofiles(request):
+    # find people the current user doesn't follow
+    current_user = request.user
+    profile = Profile.objects.get(user__id = current_user.id)
+    follow = profile.following.all()
+    followed = [user.user for user in follow]
+    not_followed = [user for user in User.objects.all() if user not in followed and user.id != current_user.id]
     posts = [post for post in Image.objects.all()]
+    # initialize database
     if not posts:
-        initialize()
-    print(posts[0].image.url)
-    return render(request, 'allprofiles.html', {"posts": posts})
+        initialize(current_user)
+    posts = [post for post in Image.objects.all()]
+    if 'comment' in request.GET and request.GET["comment"]:
+        com = request.GET.get('comment')
+    return render(request, 'allprofiles.html', {"posts": posts, "follow":not_followed})
 
+def new_comment(request, post_id):
+    if 'comment' in request.GET and request.GET["comment"]:
+        com = request.GET.get('comment')
+        new_com = Comment(comment = com)
+        new_com.save()
+        post = Image.objects.get(id = post_id)
+        post.comments.add(new_com)
+        post.save()
+        print("justice                  \n\n", com) #working
+        return redirect('allprofiles')
+    return redirect('allprofiles')
+def new_like(request, post_id):
+    post = Image.objects.get(id = post_id)
+    print(post.likes)
+    post.likes += 1
+    post.save()
+    print(post.likes)
+    return redirect('allprofiles')
 
-# @login_required(login_url = '/auth/login')
+@login_required(login_url = '/auth/login')
+def follow(request, user_id):
+    current_user = request.user
+    print("\n", current_user.id, "\n\n")
+    user_to_follow = User.objects.get(id= user_id)
+    print("\n", user_to_follow.id, "\n\n")
+    follow = Following(user = user_to_follow)
+    follow.save()
+    follower = Profile.objects.get(user__id =  current_user.id)
+    follower.following.add(follow)
+    follower.save()
+    print(follower.user.username, "\nabove\n\n")
+    return redirect('allprofiles')
+
+@login_required(login_url = '/auth/login')
 def profile(request):
-    pass
-# @login_required(login_url = '/auth/login')
+    current_user = request.user
+    profile = Profile.objects.get(user__id = current_user.id)
+    posts = Image.objects.filter(profile__id = profile.id).all()
+    return render(request, 'profile.html',{"posts": posts})
+@login_required(login_url = '/auth/login')
 def search_results(request):
     if 'user' in request.GET and request.GET["user"]:
+        print("another ok\n\n")
         search_term = request.GET.get("user")
         searched_users = Profile.search_users(search_term)
         message = f"{search_term}"
-        return render(request, 'search.html',{"message":message,"images": searched_images})
+        # print(message)
+        return render(request, 'search.html',{"message":message,"users": searched_users})
 
     else:
         message = "You haven't searched for any term \n"
         return render(request, 'search.html',{"message":message})
-# @login_required(login_url = '/auth/login')
+@login_required(login_url = '/auth/login')
 def photo(request, photo_id):
     try:
         photo = Image.objects.get(id = photo_id)
@@ -77,18 +133,18 @@ def photo(request, photo_id):
     except:
         raise Http404()
     return render(request, 'image.html', {"photo": photo, "comments": comments})
-# @login_required(login_url = '/auth/login')
-def new_post(request):
+@login_required(login_url = '/auth/login')
+def upload(request):
     current_user = request.user
+    form = UploadForm(request.POST or None, request.FILES or None)
     if request.method == 'POST':
-        form = UploadForm(request.POST, request.FILES)
+        print(form.is_valid())
         if form.is_valid():
-            image = form.save(commit=False)
-            image.profile = current_user
+            img = request.FILES.get('image')
+            caption = request.POST.get('caption')
+            name = request.POST.get('name')
+            prof = Profile.objects.get(user__id = current_user.id)
+            image = Image(name = name, caption = caption, likes = 0, profile = prof, image = cloudinary.uploader.upload_resource(img) )
             image.save()
-        return redirect('NewsToday')
-
-    else:
-        pass
-        # form = NewArticleForm()
-    return render(request, 'new_article.html', {"form": form})
+            return redirect('profile')
+    return render(request, 'upload.html', {"form": form})
