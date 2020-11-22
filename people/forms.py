@@ -3,9 +3,10 @@ from .models import Image
 from django_registration.forms import RegistrationForm
 from urllib import request
 class UploadForm(forms.ModelForm):
+    # image = forms.ImageField()
     class Meta:
         model = Image
-        exclude = ['likes', 'comments', 'profile','pub_date']
+        exclude = ['likes','comments', 'profile','pub_date']
 
 class RegisterForm(forms.Form):
     form = RegistrationForm()
