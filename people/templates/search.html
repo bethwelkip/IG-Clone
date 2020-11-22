@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load cloudinary %}
+<div class="container">
+    <div class="row" style="padding-bottom: 30px; margin-bottom:20px">
+        {% if users%}
+        <h2>Found {{ users|length }} of searched term "{{message}}"</h2>
+        {% else %}
+        <h2> Found no users for the search term "{{message}}"</h2>
+        {% endif %}
+
+    </div>
+
+    <div class="row">
+        {% if users %}
+        {% for user in users %}
+        <div class="col-sm-6 col-md-3">
+            <h1>{{user.username}}</h1>
+            <!-- <img src="{{image.image.url}}" class="img-responsive" alt="image" style="max-width:100%"> -->
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

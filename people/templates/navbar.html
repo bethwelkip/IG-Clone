@@ -13,13 +13,13 @@
                 <a class="navbar-brand text-center" href="" style="font-size:28px">Clo-Insta
                 </a>
             </div>
-            <!-- 
-                  -->
-            <form class="navbar-form" role="search" action="{% url 'search_results' %}">
+            <form class="navbar-form" role="search" action="{% url 'search_results' %}" method="GET">
 
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search users" name="category">
-                    <div class="input-group-btn">
+                    <input type="text" class="form-control" placeholder="Search users" name="user">
+                    <div class="input-group-btn" name="user">
+                        <button type="submit" name='submit' class="btn btn-primary"
+                            style="float: left;margin-bottom: 5%;">Search</button>
                     </div>
                 </div>
 
@@ -28,16 +28,12 @@
                 <a href="" style="margin-right: 1%;"><img src="" alt=""> Home</a>
                 <a href="" style="margin-right: 1%;">Messages</a>
                 <a href="" style="margin-right: 1%;">Activity</a>
-                <a href="" style="margin-right: 0%;">Profile</a>
+                <a href="/profile" style="margin-right: 0%;">Profile</a>
             </div>
 
         </div>
 
     </nav>
-
-    <!-- Adding a search form  -->
-
-    <!-- search form end -->
 </body>
 
 </html>
