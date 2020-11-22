@@ -7,17 +7,16 @@ from tinymce.models import HTMLField
 class Comment(models.Model):
     comment = models.CharField(max_length = 300)
 class Profile(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
     bio = models.TextField(blank = True, null = True)
     dp = CloudinaryField('image', null = True, blank = True)
 class Image(models.Model):
     image = CloudinaryField('image', null = True, blank = True)
     name = models.CharField(max_length = 30)
-    caption = HTMLField()
+    caption = models.TextField(blank = True, null = True) #HTMLField()
     likes = models.IntegerField()
     comments = models.ForeignKey(Comment, on_delete=models.DO_NOTHING)
     profile = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
-    pub_date = models.DateTimeField(auto_now_add=True)
+    pub_date = models.DateTimeField(null = True, blank = True, auto_now_add=True)
 
     def save_image(self):
         self.save()
