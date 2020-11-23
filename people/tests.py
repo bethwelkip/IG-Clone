@@ -64,14 +64,20 @@ class TestProfile(TestCase):
         profs = Profile.objects.all()
         self.assertTrue(len(profs) > 0)
 
-    def test_delete_image(self):
+    def test_search_users(self):
+        self.user.save()
+        self.profile.save()
+        user = Profile.search_users("username")
+        self.assertTrue(len(user) > 0)
+
+    def test_delete_profile(self):
         self.user.save()
         self.profile.save()
         self.profile.delete_profile()
         profs = Profile.objects.all()
         self.assertTrue(len(profs) == 0)
 
-    def test_update_image(self):
+    def test_update_profile(self):
         cwd = os.getcwd()
         self.user.save()
         self.profile.save()
