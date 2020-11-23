@@ -17,6 +17,15 @@ class Profile(models.Model):
     dp = CloudinaryField('image', null = True, blank = True)
     user = models.ForeignKey(User, on_delete = models.CASCADE)
     following = models.ManyToManyField(Following)
+    def save_profile(self):
+        self.save()
+    def delete_profile(self):
+        Profile.objects.filter(id = self.id).delete()
+    def update_profile(self, dp = None, bio = None):
+        if dp is not None:
+            Profile.objects.filter(id = self.id).update(dp = cloudinary.uploader.upload_resource(dp))
+        if bio is not None:
+            Profile.objects.filter(id = self.id).update(bio = bio)
 
     @classmethod
     def search_users(cls, search_term):
@@ -32,13 +41,19 @@ class Image(models.Model):
     comments = models.ManyToManyField(Comment)
     profile = models.ForeignKey(Profile, null = True, blank = True, on_delete=models.DO_NOTHING)
     pub_date = models.DateTimeField(null = True, blank = True, auto_now_add=True)
-
+# image, name, caption, likes, profile
     def save_image(self):
         self.save()
-    def delete_image(cls, self):
-        cls.objects.filter(id = self.id).delete()
-    def update_image(self, image):
-        Image.objects.filter(id = self.id).update(image = cloudinary.uploader.upload_resource(image))
+    def delete_image(self):
+        Image.objects.filter(id = self.id).delete()
+    def update_image(self, caption, image):
+        if image is not None:
+            img = Image.objects.get(id = self.id)
+            img.caption = caption
+            img.save()
+            img.image = cloudinary.uploader.upload_resource(image)
+            img.save()
+            return img
 
 
 
