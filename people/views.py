@@ -3,14 +3,21 @@ from django.contrib.auth import authenticate, login as log, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Image,Profile, Comment, Following
+from .models import Image,Profile, Comment, Following,InstaPhotos
 from .forms import LoginForm, UploadForm
 from .fillnav import initialize
 from .emails import send_welcome_email
 from django_registration.forms import RegistrationForm
 import cloudinary, cloudinary.api,cloudinary.uploader
-# from .forms import 
+import os
+
 # Create your views here.
+def addPhoto(): #irrelevant function
+    cwd = os.getcwd()
+    photo = InstaPhotos(name = "profile")
+    photo.save()
+    photo.image = cloudinary.uploader.upload_resource(f'{cwd}/media/profile.png')
+    photo.save()
 def register(request):
     form =  RegistrationForm(request.POST or None)
     context = {}
@@ -42,7 +49,6 @@ def login(request):
         password = request.POST.get('password')
         print(user, password, "\n\n")
         user = authenticate(request, username=user, password = password)
-        # print("Here")
         if user is not None:
             print("Here")
             log(request, user)
@@ -56,17 +62,34 @@ def login(request):
     return render(request, 'auth/login.html', context)
 @login_required(login_url = '/auth/login')
 def allprofiles(request):
+    # addPhoto()
     # find people the current user doesn't follow
     current_user = request.user
     profile = Profile.objects.get(user__id = current_user.id)
     follow = profile.following.all()
-    followed = [user.user for user in follow]
+    followed = [user.user for user in follow if user.user.id != current_user.id]
     not_followed = [user for user in User.objects.all() if user not in followed and user.id != current_user.id]
-    posts = [post for post in Image.objects.all()]
+    followed_profiles = list()
+    post = list()
+    for fol in followed:
+        followed_profiles.append(Profile.objects.get(user__id = fol.id))
+    print(followed_profiles)
+    for profile in followed_profiles:
+        post.append(Image.objects.filter(profile__id = profile.id).all())
+    filed = Profile.objects.get(user__id = current_user.id)
+    post.append(Image.objects.filter(profile__id = filed.id).all())
+    # print(type(post))
+    posts = list()
+    for pos in post:
+        for image in pos:
+            if image not in posts:
+                posts.append(image)
+    # print(len(posts))
+
     # initialize database
     if not posts:
         initialize(current_user)
-    posts = [post for post in Image.objects.all()]
+    # posts = [post for post in Image.objects.all()]
     if 'comment' in request.GET and request.GET["comment"]:
         com = request.GET.get('comment')
     return render(request, 'allprofiles.html', {"posts": posts, "follow":not_followed})
