@@ -16,5 +16,6 @@ url(r'^like/(\d+)',views.new_like,name ='like'),
 url(r'^follow/(\d+)',views.follow,name ='follow'),
 url('^upload', views.upload, name = 'upload'),
 url(r'^update/', views.update, name = 'update'),
+url(r'^logout/', views.logout_me, name = 'logout_me'),
 
 ]

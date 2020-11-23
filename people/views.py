@@ -8,6 +8,7 @@ from .forms import LoginForm, UploadForm, UpdateForm
 from .fillnav import initialize
 from .emails import send_welcome_email
 from django_registration.forms import RegistrationForm
+from django.contrib.auth.forms import AuthenticationForm
 import cloudinary, cloudinary.api,cloudinary.uploader
 import os
 
@@ -42,7 +43,7 @@ def register(request):
     return render(request, 'auth/registration.html', {"form":form})
 
 def login(request):
-    form = LoginForm()
+    form = AuthenticationForm()# LoginForm()
     context = {"form":form}
     if request.method == "POST":
         user = request.POST.get('username')
@@ -192,3 +193,7 @@ def update(request):
             prof.save()
             return redirect('profile')
     return render(request, 'updateprofile.html', {"form": form})
+def logout_me(request):
+    logout(request)
+    messages.info(request, "Logged out successfully!")
+    return redirect("login")
