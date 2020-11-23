@@ -1,55 +1,83 @@
 {% extends 'base.html' %}
 {% load cloudinary %}
 {% block content %}
-
-{% for post in posts %}
-<div class="row" style="padding-top:20px;margin-top:5%">
-    <div class="col-lg-4 col-md-4 col-xs-2 col-sm-2">
-    </div>
-    <div class="col-lg-6 col-md-6 col-xs-10 col-sm-10">
-        <a href="photo/{{post.id}}">
-            <img src="{{post.image.url}}" alt="image">
-        </a>
-        <div class="">
-            <a href="like/{{post.id}}"> <button action="comment/{{post.id}}" class="btn" name="like"
-                    style="border-radius: 0%;"> <img
-                        src="https://res.cloudinary.com/dehia4hei/image/upload/v1606066469/vhmw7pxpy3h7xpmqfquj.png"
-                        alt="Like" height="25px" > {{post.likes}}</button></a>
-            <!-- <button class="btn" style="border-radius: 0%;">share</button> -->
-            <div class="comments"> {% for comment in post.comments.all%}
-                <p>{{comment.comment}}</p>
-                {%endfor %}
+<div class="container" style="padding-top:20px;margin-top:5%">
+    <div class="jumbotron">
+        <div class="row">
+            <div class="col-lg-4 col-md-4 col-xs-4 col-sm-4">
+                <img src="{{user.dp.url}}" alt="{{user.dp}}" height="120px" style="border-radius: 50%;">
             </div>
-            <p></p>
-            <p></p>
-            <form action="comment/{{post.id}}" method="GET">
-                {% csrf_token %}
-                <input type="text" class="form-control" placeholder="write comment" name="comment">
-                <button type="submit" name='submit' class="btn btn-primary"
-                    style="float: left;margin-bottom: 5%;">Comment</button>
+            <div class="col-lg-4 col-md-4 col-xs-4 col-sm-4">
+                <h3>{{user.user.username}}</h3>
+                <a href="{% url 'update' %}"><button> Edit Profile</button></a>
+            </div>
+            <div class="col-lg-4 col-md-4 col-xs-4 col-sm-4">
+                <div class="row">
+                    <div class="col-lg-4 col-md-4 col-xs-6 col-sm-6">
+                        <b>{{user.following.all|length}} </b> Following
+                    </div>
+                    <div class="col-lg-4 col-md-4 col-xs-6 col-sm-6">
+                        <b>{{posts|length}}</b> Posts
+                    </div>
+                    <!-- {{user.following.all|length}} Following <br>
+                    {{posts|length}}Posts -->
+                </div>
+            </div>
 
-
-
-            </form>
-            <p></p>
-            <p></p>
-            <p></p>
-            <p style="margin-bottom:3%"></p>
+            <!-- {{user.user.username}} -->
         </div>
     </div>
-    <div class="col-lg-2 col-md-2 col-xs-0 col-sm-0"></div>
+    <hr>
+    <a href="upload/"><button> Add Post</button></a>
+    <hr>
+    {% for post in posts %}
+    <div class="row" style="padding-top:20px;margin-top:5%">
+        <div class="col-lg-4 col-md-4 col-xs-2 col-sm-2">
+        </div>
+        <div class="col-lg-6 col-md-6 col-xs-10 col-sm-10">
+            <a href="photo/{{post.id}}">
+                <img src="{{post.image.url}}" alt="image">
+            </a>
+            <div class="">
+                <a href="like/{{post.id}}"> <button action="comment/{{post.id}}" class="btn" name="like"
+                        style="border-radius: 0%;"> <img
+                            src="https://res.cloudinary.com/dehia4hei/image/upload/v1606066469/vhmw7pxpy3h7xpmqfquj.png"
+                            alt="Like" height="25px"> {{post.likes}}</button></a>
+                <!-- <button class="btn" style="border-radius: 0%;">share</button> -->
+                <div class="comments"> {% for comment in post.comments.all%}
+                    <p>{{comment.comment}}</p>
+                    {%endfor %}
+                </div>
+                <p></p>
+                <p></p>
+                <form action="comment/{{post.id}}" method="GET">
+                    {% csrf_token %}
+                    <input type="text" class="form-control" placeholder="write comment" name="comment">
+                    <button type="submit" name='submit' class="btn btn-primary"
+                        style="float: left;margin-bottom: 5%;">Comment</button>
+
+
+
+                </form>
+                <p></p>
+                <p></p>
+                <p></p>
+                <p style="margin-bottom:3%"></p>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-2 col-xs-0 col-sm-0"></div>
+
+    </div>
+    {% endfor %}
+
+
+
+
+
+
+
 
 </div>
-{% endfor %}
-
-
-
-
-
-
-
-
 </div>
-
 
 {% endblock %}

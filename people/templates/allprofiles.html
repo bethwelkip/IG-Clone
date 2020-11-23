@@ -2,44 +2,81 @@
 {% load bootstrap4 %}
 {% load cloudinary %}
 {% block content %}
-<div class="container" style="margin-top:5%; padding-top:10px">
 
-    {% for post in posts %}
+
+{% if posts %}
+<div class="" style="margin-top:5%; padding-top:10px"></div>
+{% for post in posts %}
+<div class="row" style="margin-top:8%; margin-left:15%;padding-top:10px">
+    <div class="col-lg-6 col-md-6 col-xs-10 col-sm-10">
+        <a href="photo/{{post.id}}">
+            <img class="img img-responsive" src="{{post.image.url}}" alt="image">
+        </a>
+        <div class="">
+            Posted by {{post.profile.user.username}}
+            <a href="like/{{post.id}}"> <button action="comment/{{post.id}}" class="btn" name="like"
+                    style="border-radius: 0%;"> <img
+                        src="https://res.cloudinary.com/dehia4hei/image/upload/v1606066469/vhmw7pxpy3h7xpmqfquj.png"
+                        alt="Like" height="25px"> {{post.likes}}</button></a> <br>
+            {{post.caption}}
+            <h5 class="text text-left"> <u> Comments</u></h5>
+            <div class="comments">
+                {% if post.comments.all %}
+                {% for comment in post.comments.all%}
+
+                <p>{{comment.comment}}</p>
+                {%endfor %}
+                {% else %}
+                <p class="text bg-primary">Be the first to comment :))</p>
+                {% endif %}
+            </div>
+            <p></p>
+            <p></p>
+            <form action="comment/{{post.id}}" method="GET">
+                {% csrf_token %}
+                <input type="text" class="form-control" placeholder="write comment" name="comment">
+                <button type="submit" name='submit' class="btn btn-primary"
+                    style="float: left;margin-bottom: 5%;">Comment</button>
+
+
+
+            </form>
+            <p></p>
+            <p></p>
+            <p></p>
+            <p style="margin-bottom:3%"></p>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-2 col-xs-0 col-sm-0"></div>
+    <div class="col-lg-4 col-md-4 col-xs-0 col-sm-0">
+        {% if post == posts.0 %}
+        <h4 style="margin-top: 17%;">People to Follow</h4>
+        <hr>
+        <div class="follow"> {% for fol in follow%}
+
+
+
+            <div class="inline">
+                <h4>{{fol.username}}</h4>
+                <a href="follow/{{fol.id}}">
+                    <button class="btn btn-default bg-primary">follow</button></a>
+            </div>
+            {%endfor%}
+            {%endif %}
+        </div>
+    </div>
+</div>
+
+{% endfor %}
+{% else %}
+<div class="container container-fluid" style="margin-top:5%; padding-top:10px">
     <div class="row">
         <div class="col-lg-6 col-md-6 col-xs-10 col-sm-10">
-            <a href="photo/{{post.id}}">
-                <img src="{{post.image.url}}" alt="image">
-            </a>
-            <div class="">
-                <a href="like/{{post.id}}"> <button action="comment/{{post.id}}" class="btn" name="like"
-                        style="border-radius: 0%;"> <img
-                            src="https://res.cloudinary.com/dehia4hei/image/upload/v1606066469/vhmw7pxpy3h7xpmqfquj.png"
-                            alt="Like" height="25px"> {{post.likes}}</button></a>
-                <!-- <button class="btn" style="border-radius: 0%;">share</button> -->
-                <div class="comments"> {% for comment in post.comments.all%}
-                    <p>{{comment.comment}}</p>
-                    {%endfor %}
-                </div>
-                <p></p>
-                <p></p>
-                <form action="comment/{{post.id}}" method="GET">
-                    {% csrf_token %}
-                    <input type="text" class="form-control" placeholder="write comment" name="comment">
-                    <button type="submit" name='submit' class="btn btn-primary"
-                        style="float: left;margin-bottom: 5%;">Comment</button>
-
-
-
-                </form>
-                <p></p>
-                <p></p>
-                <p></p>
-                <p style="margin-bottom:3%"></p>
-            </div>
+            <h4 style="margin-top: 19%;">There are no posts in your feed.</h4> <br>
+            <h5>Follow more people or <a href="/upload">post</a> to see posts</h5>
         </div>
-        <div class="col-lg-2 col-md-2 col-xs-0 col-sm-0"></div>
-        <div class="col-lg-4 col-md-4 col-xs-2 col-sm-2">
-            {% if post == posts.0 %}
+        <div class="col-lg-2 col-md-4 col-xs-0 col-sm-0"></div>
+        <div class="col-lg-4 col-md-2 col-xs-0 col-sm-0">
             <h4 style="margin-top: 17%;">People to Follow</h4>
             <hr>
             <div class="follow"> {% for fol in follow%}
@@ -52,18 +89,9 @@
                         <button class="btn btn-default bg-primary">follow</button></a>
                 </div>
                 {%endfor%}
-                {%endif %}
             </div>
         </div>
-        {% endfor %}
-
-
-
-
-
-
-
-
     </div>
 </div>
+{% endif %}
 {% endblock %}
