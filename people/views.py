@@ -141,12 +141,13 @@ def profile(request):
 @login_required(login_url = '/auth/login')
 def search_results(request):
     if 'user' in request.GET and request.GET["user"]:
-        print("another ok\n\n")
         search_term = request.GET.get("user")
         searched_users = Profile.search_users(search_term)
+        profiles = list()
+        for user in searched_users:
+            profiles.append(Profile.objects.filter(user__id = user.id).first())
         message = f"{search_term}"
-        # print(message)
-        return render(request, 'search.html',{"message":message,"users": searched_users})
+        return render(request, 'search.html',{"message":message,"users": profiles})
 
     else:
         message = "You haven't searched for any term \n"
