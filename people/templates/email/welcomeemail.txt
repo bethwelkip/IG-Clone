@@ -1,0 +1,10 @@
+Howdy {{name}}
+
+Welcome to the CloInsta!.
+
+Here You'll find a new home for you and your friends
+Once again, Welcome
+
+Best,
+
+CloInsta Team

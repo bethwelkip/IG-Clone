@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import Image,Profile, Comment, Following,InstaPhotos
-from .forms import LoginForm, UploadForm
+from .forms import LoginForm, UploadForm, UpdateForm
 from .fillnav import initialize
 from .emails import send_welcome_email
 from django_registration.forms import RegistrationForm
@@ -21,24 +21,24 @@ def addPhoto(): #irrelevant function
 def register(request):
     form =  RegistrationForm(request.POST or None)
     context = {}
-    if form.is_valid():
-        username = form.cleaned_data.get('username')
-        email = form.cleaned_data.get('email')
-        password = form.cleaned_data.get('password1')
-        # print(username, password, email)
-        # form.save()
-        user = User.objects.create_user(username = username, email = email, password = password)
-        user.save()
-        print(user.password)
-        profile = Profile(user = user)
-        profile.save()
-        print(user.id)
-        # send_welcome_email(user,email) username password email first_name last_name
-        return redirect('login')
-    else: 
-        messages.info(request, "Username or Password is incorrect")
-        print(form.errors)
-        return render(request, 'auth/registration.html', {"form":form})
+
+    if request.method == "POST":
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password1')
+            user = User.objects.create_user(username = username, email = email, password = password)
+            user.save()
+            print(user.password)
+            profile = Profile(user = user)
+            profile.save()
+            print(user.id)
+            send_welcome_email(user,email)
+            return redirect('login')
+        else: 
+            messages.info(request, "Username or Password is incorrect")
+            print(form.errors)
+            return render(request, 'auth/registration.html', {"form":form})
     return render(request, 'auth/registration.html', {"form":form})
 
 def login(request):
@@ -62,6 +62,10 @@ def login(request):
     return render(request, 'auth/login.html', context)
 @login_required(login_url = '/auth/login')
 def allprofiles(request):
+    imgs = Image.objects.all()
+     # initialize database
+    if not imgs:
+        initialize()
     # addPhoto()
     # find people the current user doesn't follow
     current_user = request.user
@@ -87,8 +91,6 @@ def allprofiles(request):
     # print(len(posts))
 
     # initialize database
-    if not posts:
-        initialize(current_user)
     # posts = [post for post in Image.objects.all()]
     if 'comment' in request.GET and request.GET["comment"]:
         com = request.GET.get('comment')
@@ -131,8 +133,11 @@ def follow(request, user_id):
 def profile(request):
     current_user = request.user
     profile = Profile.objects.get(user__id = current_user.id)
-    posts = Image.objects.filter(profile__id = profile.id).all()
-    return render(request, 'profile.html',{"posts": posts})
+    print(profile.id)
+    posts = Image.objects.filter(profile__user__id = current_user.id).all()
+    follow = profile.following.all()
+    following = len(follow)
+    return render(request, 'profile.html',{"posts": posts, "user": profile})
 @login_required(login_url = '/auth/login')
 def search_results(request):
     if 'user' in request.GET and request.GET["user"]:
@@ -171,3 +176,18 @@ def upload(request):
             image.save()
             return redirect('profile')
     return render(request, 'upload.html', {"form": form})
+
+@login_required(login_url = '/auth/login')
+def update(request):
+    current_user = request.user
+    form = UpdateForm(request.POST or None, request.FILES or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            img = request.FILES.get('dp')
+            bio = request.POST.get('bio')
+            prof = Profile.objects.get(user__id = current_user.id)
+            prof.dp = cloudinary.uploader.upload_resource(img)
+            prof.bio = bio
+            prof.save()
+            return redirect('profile')
+    return render(request, 'updateprofile.html', {"form": form})
