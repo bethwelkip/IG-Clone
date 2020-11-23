@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from random import shuffle
 import cloudinary, cloudinary.api,cloudinary.uploader
 import os
-def initialize(current_user):
+def initialize():
     cwd = os.getcwd()
     comments = ["soo cute  ","Couldn't be me haha", "wyd lol", "hii", "this cracked me up haha"]
     profiles = [("bethwel", "bethu's clique"),("moha", "moha's antics")]
