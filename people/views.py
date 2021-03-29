@@ -11,6 +11,8 @@ from django_registration.forms import RegistrationForm
 from django.contrib.auth.forms import AuthenticationForm
 import cloudinary, cloudinary.api,cloudinary.uploader
 import os
+from io import BytesIO
+from PIL import Image as pillow_image
 
 # Create your views here.
 def addPhoto(): #irrelevant function
@@ -170,11 +172,17 @@ def upload(request):
     if request.method == 'POST':
         print(form.is_valid())
         if form.is_valid():
-            img = request.FILES.get('image')
+            imag = request.FILES.get('image')
+            im = pillow_image.open(imag)
+            bytes_io = BytesIO()
+            im =im.resize((600, 600))
+            im.save(bytes_io, 'png')
+            im = bytes_io.getvalue()
+            img = cloudinary.uploader.upload_resource(im)
             caption = request.POST.get('caption')
             name = request.POST.get('name')
             prof = Profile.objects.get(user__id = current_user.id)
-            image = Image(name = name, caption = caption, likes = 0, profile = prof, image = cloudinary.uploader.upload_resource(img) )
+            image = Image(name = name, caption = caption, likes = 0, profile = prof, image = img)
             image.save()
             return redirect('profile')
     return render(request, 'upload.html', {"form": form})
